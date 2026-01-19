@@ -1,0 +1,24 @@
+﻿<Window x:Class="MaxTemp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MaxTemp"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize">
+    <Viewbox>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Name="lblAufforderung">Bitte klicken, um Temperaturen auszuwerten.</Label>
+            <Button Grid.Row="1" Name="btnAuswerten" Click="BtnAuswerten_Click">Auswerten</Button>
+            <Label Grid.Row="2" Name="lblAusgabe">---88,5 Grad ist die höchste Temperatur (Dummy)---</Label>
+        </Grid>
+    </Viewbox>
+</Window>
