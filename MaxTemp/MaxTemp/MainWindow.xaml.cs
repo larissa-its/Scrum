@@ -36,22 +36,71 @@ namespace MaxTemp
         /// <param name="e"></param>
         private void BtnAuswerten_Click(object sender, RoutedEventArgs e)
         {
-            //Zugriff auf Datei erstellen.
+            // Zugriff auf Datei erstellen.
+            // Voraussetzung: temps.csv ist im Projekt als "Content" eingebunden und wird ins Ausgabeverzeichnis kopiert.
+            var filename = "temps.csv";
 
-            //Anfangswert setzen, um sinnvoll vergleichen zu können.
+            if (!File.Exists(filename))
+            {
+                MessageBox.Show(
+                    "File 'temps.csv' was not found.\n" +
+                    "Hint: In Visual Studio select temps.csv -> Properties -> Build Action = Content, Copy to Output Directory = Copy if newer.",
+                    "File Warning");
+                return;
+            }
 
+            StreamReader reader = null;
 
-            //In einer Schleife die Werte holen und auswerten. Den größten Wert "merken".
+            try
+            {
+                reader = new StreamReader(filename);
 
+                // Anfangswert setzen, um sinnvoll vergleichen zu können.
+                double maxTemp = double.NegativeInfinity;
+                bool foundAny = false;
 
-            //Datei wieder freigeben.
+                // In einer Schleife die Werte holen und auswerten. Den größten Wert "merken".
+                // CSV-Format: Sensor,yyyy-MM-dd HH:mm:ss,Temperature
+                var culture = CultureInfo.InvariantCulture;
 
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
 
-            //Höchstwert auf Oberfläche ausgeben.
+                    var parts = line.Split(',');
+                    if (parts.Length != 3)
+                        continue;
+
+                    // parts[2] = temperature
+                    if (!double.TryParse(parts[2].Trim(), NumberStyles.Float, culture, out double temp))
+                        continue;
+
+                    foundAny = true;
+                    if (temp > maxTemp)
+                        maxTemp = temp;
+                }
+
+                // Höchstwert auf Oberfläche ausgeben.
+                if (!foundAny)
+                {
+                    MessageBox.Show("No valid temperature values found in temps.csv.", "Result");
+                    return;
+                }
+
+                MessageBox.Show($"Maximum temperature: {maxTemp.ToString("0.0", culture)} °C", "Result");
+            }
+            finally
+            {
+                // Datei wieder freigeben.
+                if (reader != null)
+                    reader.Dispose();
+            }
 
             MessageBox.Show("Gleich kachelt das Programm...");
             //kommentieren Sie die Exception aus.
-            throw new Exception("peng");
+            //throw new Exception("peng");
         }
     }
 }
