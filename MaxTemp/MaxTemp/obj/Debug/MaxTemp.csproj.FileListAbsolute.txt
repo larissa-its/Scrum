@@ -14,3 +14,19 @@ C:\Users\MidhatBoustani\source\repos\Scrum\MaxTemp\MaxTemp\obj\Debug\MaxTemp.csp
 C:\Users\MidhatBoustani\source\repos\Scrum\MaxTemp\MaxTemp\obj\Debug\MaxTemp.csproj.CoreCompileInputs.cache
 C:\Users\MidhatBoustani\source\repos\Scrum\MaxTemp\MaxTemp\obj\Debug\MaxTemp.exe
 C:\Users\MidhatBoustani\source\repos\Scrum\MaxTemp\MaxTemp\obj\Debug\MaxTemp.pdb
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\bin\Debug\temps.csv
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\bin\Debug\MaxTemp.exe.config
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\bin\Debug\MaxTemp.exe
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\bin\Debug\MaxTemp.pdb
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.csproj.AssemblyReference.cache
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MainWindow.g.cs
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\App.g.cs
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp_MarkupCompile.cache
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp_MarkupCompile.lref
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MainWindow.baml
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.g.resources
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.Properties.Resources.resources
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.csproj.GenerateResource.cache
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.csproj.CoreCompileInputs.cache
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.exe
+C:\Users\MidhatBoustani\OneDrive - enventa Group\Desktop\C#\asdasd\MaxTemp\MaxTemp\obj\Debug\MaxTemp.pdb

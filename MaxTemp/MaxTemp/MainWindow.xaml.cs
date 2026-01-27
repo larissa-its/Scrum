@@ -56,10 +56,11 @@ namespace MaxTemp
                 reader = new StreamReader(filename);
 
                 // Anfangswert setzen, um sinnvoll vergleichen zu können.
-                double maxTemp = double.NegativeInfinity;
+                // Dictionary speichert: (Tag, Sensor) -> maximale Temperatur
+                var dailyMaxPerSensor = new Dictionary<(DateTime Day, string Sensor), double>();
                 bool foundAny = false;
 
-                // In einer Schleife die Werte holen und auswerten. Den größten Wert "merken".
+                // In einer Schleife die Werte holen und auswerten. Den größten Wert pro Tag und Sensor "merken".
                 // CSV-Format: Sensor,yyyy-MM-dd HH:mm:ss,Temperature
                 var culture = CultureInfo.InvariantCulture;
 
@@ -73,23 +74,51 @@ namespace MaxTemp
                     if (parts.Length != 3)
                         continue;
 
-                    // parts[2] = temperature
-                    if (!double.TryParse(parts[2].Trim(), NumberStyles.Float, culture, out double temp))
+                    var sensor = parts[0].Trim();
+                    var timestampText = parts[1].Trim();
+                    var tempText = parts[2].Trim();
+
+                    // Timestamp parsen
+                    if (!DateTime.TryParseExact(timestampText, "yyyy-MM-dd HH:mm:ss", culture, DateTimeStyles.None, out DateTime timestamp))
+                        continue;
+
+                    // Temperatur parsen
+                    if (!double.TryParse(tempText, NumberStyles.Float, culture, out double temp))
                         continue;
 
                     foundAny = true;
-                    if (temp > maxTemp)
-                        maxTemp = temp;
+
+                    // Nur das Datum (ohne Uhrzeit) verwenden für Tages-Gruppierung
+                    var day = timestamp.Date;
+                    var key = (Day: day, Sensor: sensor);
+
+                    // Höchsten Wert für diesen Tag und Sensor merken
+                    if (!dailyMaxPerSensor.TryGetValue(key, out double currentMax) || temp > currentMax)
+                    {
+                        dailyMaxPerSensor[key] = temp;
+                    }
                 }
 
-                // Höchstwert auf Oberfläche ausgeben.
+                // Höchstwerte auf Oberfläche ausgeben.
                 if (!foundAny)
                 {
                     MessageBox.Show("No valid temperature values found in temps.csv.", "Result");
                     return;
                 }
 
-                MessageBox.Show($"Maximum temperature: {maxTemp.ToString("0.0", culture)} °C", "Result");
+                // Ergebnis formatieren für Anzeige
+                var resultBuilder = new StringBuilder();
+                resultBuilder.AppendLine("Daily Maximum Temperatures per Sensor:");
+                resultBuilder.AppendLine();
+
+                // Sortiert nach Tag, dann Sensor
+                foreach (var entry in dailyMaxPerSensor.OrderBy(kv => kv.Key.Day).ThenBy(kv => kv.Key.Sensor))
+                {
+                    resultBuilder.AppendLine(
+                        $"{entry.Key.Day:yyyy-MM-dd} | {entry.Key.Sensor} -> {entry.Value.ToString("0.0", culture)} °C");
+                }
+
+                MessageBox.Show(resultBuilder.ToString(), "Daily Max per Sensor");
             }
             finally
             {
@@ -98,9 +127,9 @@ namespace MaxTemp
                     reader.Dispose();
             }
 
-            MessageBox.Show("Gleich kachelt das Programm...");
-            //kommentieren Sie die Exception aus.
-            //throw new Exception("peng");
+            // MessageBox.Show("Gleich kachelt das Programm...");
+            // kommentieren Sie die Exception aus.
+            // throw new Exception("peng");
         }
     }
 }
