@@ -3,23 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MaxTemp
 {
-    /// <summary>
-    /// Interaktionslogik für MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -27,45 +14,28 @@ namespace MaxTemp
             InitializeComponent();
         }
 
-        /// <summary>
-        /// Diese Routine (EventHandler des Buttons Auswerten) liest die Werte
-        /// zeilenweise aus der Datei temps.csv aus, merkt sich den höchsten Wert
-        /// und gibt diesen auf der Oberfläche aus.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void BtnAuswerten_Click(object sender, RoutedEventArgs e)
         {
-            // Zugriff auf Datei erstellen.
-            // Voraussetzung: temps.csv ist im Projekt als "Content" eingebunden und wird ins Ausgabeverzeichnis kopiert.
-            var filename = "temps.csv";
+            string filename = "temps.csv";
 
             if (!File.Exists(filename))
             {
-                MessageBox.Show(
-                    "File 'temps.csv' was not found.\n" +
-                    "Hint: In Visual Studio select temps.csv -> Properties -> Build Action = Content, Copy to Output Directory = Copy if newer.",
-                    "File Warning");
+                MessageBox.Show("temps.csv not found in output folder!");
                 return;
             }
 
-            StreamReader reader = null;
+            var culture = CultureInfo.InvariantCulture;
+
+            // Date -> (Sensor -> MaxTemp)
+            var dailyMax = new Dictionary<DateTime, Dictionary<string, double>>();
+
+            // Speicherung aller Messwerte:
+            // Date -> TimeOfDay -> Sensor -> List<double>
+            var rawData = new Dictionary<DateTime, Dictionary<TimeSpan, Dictionary<string, double>>>();
 
             try
             {
-                reader = new StreamReader(filename);
-
-                // Anfangswert setzen, um sinnvoll vergleichen zu können.
-                // Dictionary speichert: (Tag, Sensor) -> maximale Temperatur
-                var dailyMaxPerSensor = new Dictionary<(DateTime Day, string Sensor), double>();
-                bool foundAny = false;
-
-                // In einer Schleife die Werte holen und auswerten. Den größten Wert pro Tag und Sensor "merken".
-                // CSV-Format: Sensor,yyyy-MM-dd HH:mm:ss,Temperature
-                var culture = CultureInfo.InvariantCulture;
-
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                foreach (var line in File.ReadLines(filename))
                 {
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
@@ -74,62 +44,151 @@ namespace MaxTemp
                     if (parts.Length != 3)
                         continue;
 
-                    var sensor = parts[0].Trim();
-                    var timestampText = parts[1].Trim();
-                    var tempText = parts[2].Trim();
+                    string sensor = parts[0].Trim();
+                    string timestampText = parts[1].Trim();
+                    string tempText = parts[2].Trim();
 
-                    // Timestamp parsen
-                    if (!DateTime.TryParseExact(timestampText, "yyyy-MM-dd HH:mm:ss", culture, DateTimeStyles.None, out DateTime timestamp))
+                    if (!DateTime.TryParseExact(timestampText,
+                        "yyyy-MM-dd HH:mm:ss",
+                        culture,
+                        DateTimeStyles.None,
+                        out DateTime timestamp))
                         continue;
 
-                    // Temperatur parsen
-                    if (!double.TryParse(tempText, NumberStyles.Float, culture, out double temp))
+                    if (!double.TryParse(tempText,
+                        NumberStyles.Float,
+                        culture,
+                        out double temp))
                         continue;
 
-                    foundAny = true;
+                    DateTime day = timestamp.Date;
+                    TimeSpan time = timestamp.TimeOfDay;
 
-                    // Nur das Datum (ohne Uhrzeit) verwenden für Tages-Gruppierung
-                    var day = timestamp.Date;
-                    var key = (Day: day, Sensor: sensor);
+                    // ---------- DAILY MAX ----------
+                    if (!dailyMax.ContainsKey(day))
+                        dailyMax[day] = new Dictionary<string, double>();
 
-                    // Höchsten Wert für diesen Tag und Sensor merken
-                    if (!dailyMaxPerSensor.TryGetValue(key, out double currentMax) || temp > currentMax)
-                    {
-                        dailyMaxPerSensor[key] = temp;
-                    }
+                    if (!dailyMax[day].ContainsKey(sensor) || temp > dailyMax[day][sensor])
+                        dailyMax[day][sensor] = temp;
+
+                    // ---------- RAW DATA ----------
+                    if (!rawData.ContainsKey(day))
+                        rawData[day] = new Dictionary<TimeSpan, Dictionary<string, double>>();
+
+                    if (!rawData[day].ContainsKey(time))
+                        rawData[day][time] = new Dictionary<string, double>();
+
+                    rawData[day][time][sensor] = temp;
                 }
 
-                // Höchstwerte auf Oberfläche ausgeben.
-                if (!foundAny)
+                if (dailyMax.Count == 0)
                 {
-                    MessageBox.Show("No valid temperature values found in temps.csv.", "Result");
+                    MessageBox.Show("No valid data found.");
                     return;
                 }
 
-                // Ergebnis formatieren für Anzeige
-                var resultBuilder = new StringBuilder();
-                resultBuilder.AppendLine("Daily Maximum Temperatures per Sensor:");
-                resultBuilder.AppendLine();
+                var allSensors = dailyMax
+                    .SelectMany(d => d.Value.Keys)
+                    .Distinct()
+                    .OrderBy(s => s)
+                    .ToList();
 
-                // Sortiert nach Tag, dann Sensor
-                foreach (var entry in dailyMaxPerSensor.OrderBy(kv => kv.Key.Day).ThenBy(kv => kv.Key.Sensor))
+                // ----------------- dailymax.csv -----------------
+                using (StreamWriter writer = new StreamWriter("dailymax.csv"))
                 {
-                    resultBuilder.AppendLine(
-                        $"{entry.Key.Day:yyyy-MM-dd} | {entry.Key.Sensor} -> {entry.Value.ToString("0.0", culture)} °C");
+                    writer.Write("Date");
+                    foreach (var sensor in allSensors)
+                        writer.Write("," + sensor);
+                    writer.WriteLine();
+
+                    foreach (var day in dailyMax.Keys.OrderBy(d => d))
+                    {
+                        writer.Write(day.ToString("yyyy-MM-dd"));
+                        foreach (var sensor in allSensors)
+                        {
+                            if (dailyMax[day].ContainsKey(sensor))
+                                writer.Write("," + dailyMax[day][sensor].ToString("0.0", culture));
+                            else
+                                writer.Write(",");
+                        }
+                        writer.WriteLine();
+                    }
                 }
 
-                MessageBox.Show(resultBuilder.ToString(), "Daily Max per Sensor");
-            }
-            finally
-            {
-                // Datei wieder freigeben.
-                if (reader != null)
-                    reader.Dispose();
-            }
+                // ----------------- WARME TAGE (>50°C) -----------------
+                var hotDays = dailyMax
+                    .Where(d => d.Value.Values.Any(temp => temp > 50.0))
+                    .Select(d => d.Key)
+                    .ToList();
 
-            // MessageBox.Show("Gleich kachelt das Programm...");
-            // kommentieren Sie die Exception aus.
-            // throw new Exception("peng");
+                if (hotDays.Count == 0)
+                {
+                    MessageBox.Show("No hot days (>50°C) found.");
+                    return;
+                }
+
+                // Time -> Sensor -> List<double>
+                var averageData = new Dictionary<TimeSpan, Dictionary<string, List<double>>>();
+
+                foreach (var day in hotDays)
+                {
+                    if (!rawData.ContainsKey(day))
+                        continue;
+
+                    foreach (var timeEntry in rawData[day])
+                    {
+                        TimeSpan time = timeEntry.Key;
+
+                        if (!averageData.ContainsKey(time))
+                            averageData[time] = new Dictionary<string, List<double>>();
+
+                        foreach (var sensorEntry in timeEntry.Value)
+                        {
+                            string sensor = sensorEntry.Key;
+                            double temp = sensorEntry.Value;
+
+                            if (!averageData[time].ContainsKey(sensor))
+                                averageData[time][sensor] = new List<double>();
+
+                            averageData[time][sensor].Add(temp);
+                        }
+                    }
+                }
+
+                // ----------------- yearaverage.csv -----------------
+                using (StreamWriter writer = new StreamWriter("yearaverage.csv"))
+                {
+                    writer.Write("Time");
+                    foreach (var sensor in allSensors)
+                        writer.Write("," + sensor);
+                    writer.WriteLine();
+
+                    foreach (var time in averageData.Keys.OrderBy(t => t))
+                    {
+                        writer.Write(time.TotalHours.ToString("0.00", culture));
+
+                        foreach (var sensor in allSensors)
+                        {
+                            if (averageData[time].ContainsKey(sensor))
+                            {
+                                double avg = averageData[time][sensor].Average();
+                                writer.Write("," + avg.ToString("0.0", culture));
+                            }
+                            else
+                                writer.Write(",");
+                        }
+
+                        writer.WriteLine();
+                    }
+                }
+
+                MessageBox.Show("dailymax.csv AND yearaverage.csv successfully created!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
     }
 }
+
